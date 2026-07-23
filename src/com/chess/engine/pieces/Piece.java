@@ -1,109 +1,92 @@
 package com.chess.engine.pieces;
+import java.util.Collection;
 
 import com.chess.engine.Alliance;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 
-import java.util.Collection;
-
 public abstract class Piece {
-
-    final PieceType pieceType;
-    final Alliance pieceAlliance;
-    final int piecePosition;
-    private final boolean isFirstMove;
-    private final int cachedHashCode;
-
-    Piece(final PieceType type,
-          final Alliance alliance,
-          final int piecePosition,
-          final boolean isFirstMove) {
-        this.pieceType = type;
-        this.piecePosition = piecePosition;
-        this.pieceAlliance = alliance;
-        this.isFirstMove = isFirstMove;
-        this.cachedHashCode = computeHashCode();
-    }
-
-    public PieceType getPieceType() {
-        return this.pieceType;
-    }
-
-    public Alliance getPieceAllegiance() {
-        return this.pieceAlliance;
-    }
-
-    public int getPiecePosition() {
-        return this.piecePosition;
-    }
-
-    public boolean isFirstMove() {
-        return this.isFirstMove;
-    }
-
-    public int getPieceValue() {
-        return this.pieceType.getPieceValue();
-    }
-
-    public abstract int locationBonus();
-
-    public abstract Piece getMovedPiece(Move move);
-
-    public abstract Collection<Move> calculateLegalMoves(final Board board);
-
-    @Override
-    public boolean equals(final Object other) {
-        if (this == other) {
-            return true;
-        }
-        if (!(other instanceof Piece)) {
-            return false;
-        }
-        final Piece otherPiece = (Piece) other;
-        return this.piecePosition == otherPiece.piecePosition && this.pieceType == otherPiece.pieceType &&
-               this.pieceAlliance == otherPiece.pieceAlliance && this.isFirstMove == otherPiece.isFirstMove;
-    }
-
-    @Override
-    public int hashCode() {
-        return this.cachedHashCode;
-    }
-
-    private int computeHashCode() {
-        int result = this.pieceType.hashCode();
-        result = 31 * result + this.pieceAlliance.hashCode();
-        result = 31 * result + this.piecePosition;
-        result = 31 * result + (this.isFirstMove ? 1 : 0);
-        return result;
-    }
-
-    public enum PieceType {
-
-        PAWN(100, "P"),
-        KNIGHT(300, "N"),
-        BISHOP(330, "B"),
-        ROOK(500, "R"),
-        QUEEN(900, "Q"),
-        KING(1000 , "K");
-
-        private final int value;
-        private final String pieceName;
-
-        public int getPieceValue() {
-            return this.value;
-        }
-
-        @Override
-        public String toString() {
-            return this.pieceName;
-        }
-
-        PieceType(final int val,
-                  final String pieceName) {
-            this.value = val;
-            this.pieceName = pieceName;
-        }
-
-    }
-
+	protected final int piecePositionX;
+	protected final int piecePositionY;
+	protected final Alliance pieceAlliance;
+	protected final boolean isFirstMove;
+	protected final PieceType pieceType;
+	private final int cachedHashCode;
+	
+	public Piece(final int piecePositionX, final int piecePositionY,
+			final Alliance pieceAlliance,final PieceType pieceType,final boolean isFirstMove){
+		this.pieceAlliance=pieceAlliance;
+		this.piecePositionX=piecePositionX;
+		this.piecePositionY=piecePositionY;
+		this.pieceType=pieceType;
+		//Work to do here
+		this.isFirstMove=isFirstMove;
+		this.cachedHashCode=computeHashCode();
+	}
+	private int computeHashCode() {
+		int result= pieceType.hashCode();
+		result = result*31 + pieceAlliance.hashCode();
+		result = result*31 + piecePositionY*8+piecePositionX;
+		result = result*31 + (isFirstMove()?1:0);
+		return result;
+	}
+	public PieceType getPieceType() {
+		return this.pieceType;
+	}
+	
+	public int getPiecePosition() {
+		return piecePositionY*8 + piecePositionX;
+	}
+	
+	public Alliance getPieceAlliance() {
+		return this.pieceAlliance;
+	}
+	
+	public boolean isFirstMove() {
+		return isFirstMove;
+	}
+	
+	public abstract Collection<Move> calculateLegalMoves(final Board board);
+	
+	public abstract Piece movePiece(Move move);
+	
+	@Override
+	public boolean equals(final Object other) {
+		if(this==other)
+			return true;
+		if(!(other instanceof Piece)) {
+			return false;
+		}
+		final Piece otherPiece= (Piece)other;
+		return piecePositionX==otherPiece.getPiecePosition()%8 &&
+				piecePositionY==otherPiece.getPiecePosition()/8 &&
+				pieceType==otherPiece.getPieceType() &&
+				pieceAlliance==otherPiece.getPieceAlliance() &&
+				isFirstMove==otherPiece.isFirstMove();
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.cachedHashCode;
+	}
+	
+	public enum PieceType {
+		PAWN("P"), BISHOP("B"), KNIGHT("N"), KING("K"), QUEEN("Q"), ROOK("R");
+		private String pieceName;
+		PieceType(final String pieceName){
+			this.pieceName=pieceName;
+		}	
+		@Override
+		public String toString() {
+			return this.pieceName;
+		}
+		
+		public boolean isKing() {
+			return this==KING;
+		}
+		public boolean isRook() {
+			return this==ROOK;
+		}
+	}
+	
 }

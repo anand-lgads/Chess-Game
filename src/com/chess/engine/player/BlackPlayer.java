@@ -1,92 +1,85 @@
 package com.chess.engine.player;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import com.chess.engine.Alliance;
 import com.chess.engine.board.Board;
-import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
-import com.chess.engine.board.Move.KingSideCastleMove;
-import com.chess.engine.board.Move.QueenSideCastleMove;
-import com.chess.engine.pieces.King;
+import com.chess.engine.board.Tile;
 import com.chess.engine.pieces.Piece;
 import com.chess.engine.pieces.Rook;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+public class BlackPlayer extends Player{
+	
+	public BlackPlayer(final Board board, 
+			final Collection<Move> whiteStandardLegalMoves, 
+			final Collection<Move> blackStandardLegalMoves) {
+		super(board,blackStandardLegalMoves,whiteStandardLegalMoves);
+	}
+	
+	@Override
+	public Collection<Piece> getActivePieces(){
+		return this.board.getBlackPieces();
+	}
 
-import static com.chess.engine.pieces.Piece.PieceType.ROOK;
+	@Override
+	public Alliance getAlliance() {
+		return Alliance.BLACK;
+	}
 
-public final class BlackPlayer extends Player {
+	@Override
+	public Player getOpponent() {
+		return this.board.whitePlayer();
+	}
 
-    public BlackPlayer(final Board board,
-                       final King playerKing,
-                       final Collection<Move> whiteStandardLegals,
-                       final Collection<Move> blackStandardLegals) {
-        super(board, playerKing, blackStandardLegals, whiteStandardLegals);
-    }
-
-    @Override
-    protected Collection<Move> calculateKingCastles(final Collection<Move> playerLegals,
-                                                    final Collection<Move> opponentLegals) {
-
-        if (!hasCastlingRights()) {
-            return Collections.emptyList();
-        }
-
-        final List<Move> kingCastles = new ArrayList<>();
-
-        if (this.playerKing.isFirstMove() && this.playerKing.getPiecePosition() == 4 && !this.isInCheck) {
-            //blacks king side castle
-            if (this.board.getPiece(5) == null && this.board.getPiece(6) == null) {
-                final Piece kingSideRook = this.board.getPiece(7);
-                if (kingSideRook != null && kingSideRook.isFirstMove() &&
-                        BoardUtils.calculateAttacksOnTile(5, opponentLegals).isEmpty() &&
-                        BoardUtils.calculateAttacksOnTile(6, opponentLegals).isEmpty() &&
-                        kingSideRook.getPieceType() == ROOK) {
-                    if (!BoardUtils.isKingPawnTrap(this.board, this.playerKing, 12)) {
-                        kingCastles.add(
-                                new KingSideCastleMove(this.board, this.playerKing, 6, (Rook) kingSideRook, 5));
-
-                    }
-                }
-            }
-            //blacks queen side castle
-            if (this.board.getPiece(1) == null && this.board.getPiece(2) == null &&
-                    this.board.getPiece(3) == null) {
-                final Piece queenSideRook = this.board.getPiece(0);
-                if (queenSideRook != null && queenSideRook.isFirstMove() &&
-                        BoardUtils.calculateAttacksOnTile(2, opponentLegals).isEmpty() &&
-                        BoardUtils.calculateAttacksOnTile(3, opponentLegals).isEmpty() &&
-                        queenSideRook.getPieceType() == ROOK) {
-                    if (!BoardUtils.isKingPawnTrap(this.board, this.playerKing, 12)) {
-                        kingCastles.add(
-                                new QueenSideCastleMove(this.board, this.playerKing, 2, (Rook) queenSideRook, 3));
-                    }
-                }
-            }
-        }
-        return Collections.unmodifiableList(kingCastles);
-    }
-
-    @Override
-    public WhitePlayer getOpponent() {
-        return this.board.whitePlayer();
-    }
-
-    @Override
-    public int[] getActivePieces() {
-        return this.board.getBlackPieceCoordinates();
-    }
-
-    @Override
-    public Alliance getAlliance() {
-        return Alliance.BLACK;
-    }
-
-    @Override
-    public String toString() {
-        return Alliance.BLACK.toString();
-    }
+	@Override
+	protected Collection<Move> calculateKingCastles(Collection<Move> playerLegals, Collection<Move> opponentsLegals) {
+		final List<Move> kingCastles= new ArrayList<>();
+		
+		if(this.playerKing.isFirstMove() && !this.isInCheck()) {
+			//whiteKingSide
+			if(!this.board.getTile(5,7).isTileOccupied() && 
+					!this.board.getTile(6,7).isTileOccupied()) {
+				final Tile rookTile=this.board.getTile(7, 7);
+				if(rookTile.isTileOccupied() && rookTile.getPiece().isFirstMove()) {
+					if(Player.calculateAttacksOnTile(61,opponentsLegals).isEmpty()&&
+							Player.calculateAttacksOnTile(62, opponentsLegals).isEmpty()&&
+							rookTile.getPiece().getPieceType().isRook()) {
+						//TODO
+						kingCastles.add(new Move.KingSideCastleMove(this.board,
+								this.playerKing,
+								6, 7,
+								(Rook)rookTile.getPiece(),
+								rookTile.getTileCoordinate(),
+								61));
+					}
+					
+				}
+			}
+			//QueenSide
+			if(!this.board.getTile(1,7).isTileOccupied() && 
+					!this.board.getTile(2, 7).isTileOccupied()&&
+					!this.board.getTile(3,7).isTileOccupied()) {
+				final Tile rookTile=this.board.getTile(0, 7);
+				if(rookTile.isTileOccupied() && rookTile.getPiece().isFirstMove()) {
+					if(Player.calculateAttacksOnTile(58,opponentsLegals).isEmpty()&&
+							Player.calculateAttacksOnTile(59, opponentsLegals).isEmpty()&&
+							rookTile.getPiece().getPieceType().isRook()) {
+						//TODO
+						kingCastles.add(new Move.QueenSideCastleMove(this.board,
+								this.playerKing,
+								2, 7,
+								(Rook)rookTile.getPiece(),
+								rookTile.getTileCoordinate(),
+								59));
+					}
+				}
+			}
+		}	
+		
+		return kingCastles;
+	}
 
 }
